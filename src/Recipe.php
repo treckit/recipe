@@ -3,8 +3,10 @@
 namespace Afterflow\Recipe;
 
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Arr;
 use Illuminate\Translation\FileLoader;
 use Illuminate\Translation\Translator;
 use Illuminate\Validation\Factory;
@@ -65,7 +67,7 @@ class Recipe
 
         if ($key) {
             // apply prop to input
-            $prop  = $this->props[ $key ];
+            $prop  = $this->props($key);
             $value = null;
 
             // apply default
@@ -89,7 +91,8 @@ class Recipe
             $rules      = $prop[ 'rules' ] ?? [];
             $validation = $this->validation($key, $value, $rules);
             if ($validation->fails()) {
-                throw new \Exception(static::class . ': ' . $validation->errors()->first());
+                $messages = $validation->getMessageBag()->all('[:key]: [:message]');
+                throw new \Exception(static::class . ': Validation failed: ' . PHP_EOL . join("\n", $messages));
             }
 
             return $value;
@@ -108,6 +111,12 @@ class Recipe
         return $data;
     }
 
+    /**
+     * @param $key
+     * @param null $value
+     * @param array $rules
+     * @return Validator
+     */
     protected function validation($key, $value = null, $rules = [])
     {
 
@@ -258,5 +267,38 @@ class Recipe
 
         // Render
         return $viewFactory->file($this->template, $input)->render();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getProps(): array
+    {
+        return $this->props;
+    }
+
+    /**
+     * @param array $props
+     * @return array
+     */
+    public function setProps(array $props): array
+    {
+        $this->props = array_replace_recursive($this->getProps(), $props);
+
+        return $this->getProps();
+    }
+
+    protected function props(string $key, $value = null)
+    {
+        $key = trim($key);
+        if (empty($key)) {
+            return null;
+        }
+
+        if (!is_null($value)) {
+            return Arr::get($this->getProps(), $key);
+        }
+
+        return $this->setProps(Arr::set($this->props, $key, $value));
     }
 }
