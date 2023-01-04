@@ -29,10 +29,10 @@
     },
     "require": {
         "php": "^8.0",
-        "illuminate/view": "^8.54",
-        "illuminate/events": "^8.54",
-        "illuminate/filesystem": "^8.54",
-        "illuminate/support": "^8.54"
+        "illuminate/view": "^9.19",
+        "illuminate/events": "^9.19",
+        "illuminate/filesystem": "^9.19",
+        "illuminate/support": "^9.19"
     },
     "require-dev": {
         "phpunit/phpunit": "8.*",
